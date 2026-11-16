@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Flags · Desk Shop{% endblock %}
+{% block content %}
+<h1>Feature flags</h1>
+<p class="muted">Changes apply on the next request, without a redeploy. Defaults live in <code>flags.json</code>.</p>
+<table>
+  <tr><th>Flag</th><th>Hypothesis</th><th>State</th><th>Change</th><th>Your bucket</th></tr>
+  {% for f in flags.values() %}
+  <tr>
+    <td><code>{{ f.name }}</code></td>
+    <td>{{ f.description }}</td>
+    <td>{{ 'enabled' if f.enabled else 'KILLED' }}, {{ f.rollout }}% on
+        {% if f.overridden_by %}<br><span class="muted">override by {{ f.overridden_by }}</span>{% endif %}</td>
+    <td>
+      <form class="inline" action="{{ url_for('admin.set_flag', name=f.name) }}" method="post">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <label><input type="checkbox" name="enabled" {{ 'checked' if f.enabled }}> enabled</label>
+        <label>rollout <input type="number" name="rollout" min="0" max="100" value="{{ f.rollout }}">%</label>
+        <button class="btn">Save</button>
+      </form>
+      <form class="inline" action="{{ url_for('admin.set_flag', name=f.name) }}" method="post">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="reset">
+        <button class="btn secondary">Reset</button>
+      </form>
+    </td>
+    <td>{{ my_buckets[f.name] }} ({{ 'on' if my_buckets[f.name] < f.rollout else 'off' }} by bucket)</td>
+  </tr>
+  {% endfor %}
+</table>
+<h2>Audit log</h2>
+<table>
+  <tr><th>When (UTC)</th><th>Who</th><th>Flag</th><th>Change</th></tr>
+  {% for a in audit %}
+  <tr><td>{{ a.ts.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ a.actor }}</td><td>{{ a.flag }}</td><td>{{ a.change }}</td></tr>
+  {% else %}
+  <tr><td colspan="4" class="muted">No changes yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

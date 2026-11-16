@@ -4,3 +4,6 @@ exclude = .venv,build,__pycache__
 # S = flake8-bandit (security), B = flake8-bugbear (likely bugs), E/W = pycodestyle, F = pyflakes, C90 = complexity
 select = E,W,F,C90,S,B
 max-complexity = 10
+# tests: assert is how pytest checks (S101); the fixed key is a test-only value, not a secret (S105)
+per-file-ignores =
+    app/tests/*: S101,S105

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Desk Shop{% endblock %}
+{% block content %}
+<section class="login">
+  <h1>Sign in</h1>
+  <p>Desk Shop is a course experiment. Sign in with GitHub so your visits count as one user.
+     We only read your public profile (login and avatar).</p>
+  {% if github %}
+  <a class="btn" href="{{ url_for('auth.login_github') }}">Sign in with GitHub</a>
+  {% else %}
+  <p class="muted">GitHub sign-in is not configured.</p>
+  {% endif %}
+  {% if dev_login %}
+  <form class="dev" action="{{ url_for('auth.dev_login') }}" method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <label>Local test account <input name="login" required pattern="[A-Za-z0-9\-]+" maxlength="40"></label>
+    <button class="btn secondary">Dev sign-in</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

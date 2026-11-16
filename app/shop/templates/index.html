@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Products</h1>
+<ul class="grid">
+  {% for p in products %}
+  <li class="card">
+    <a class="name" href="{{ url_for('shop.product', sku=p.sku, src='list') }}">{{ p.name }}</a>
+    <span class="price">${{ p.price }}</span>
+    {% if stock_badge and p.stock <= low_limit %}
+    <span class="badge">Only {{ p.stock }} left</span>
+    {% endif %}
+    <div class="actions">
+      <a class="btn secondary" href="{{ url_for('shop.product', sku=p.sku, src='list') }}">Details</a>
+      {% if quick_buy %}
+      <form action="{{ url_for('shop.buy', sku=p.sku) }}" method="post">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+        <input type="hidden" name="source" value="list">
+        <button class="btn">Buy now</button>
+      </form>
+      {% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

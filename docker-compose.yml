@@ -1,7 +1,15 @@
-name: a9-devsecops
+# Local run: http://localhost:8000 with the dev sign-in (no GitHub needed).
+name: desk-shop
 services:
   shop:
     build: ./app
-    image: a9-shop:local
+    image: desk-shop:local
     ports:
       - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DEV_LOGIN: "1"
+      SESSION_COOKIE_SECURE: "0"
+      ADMIN_GITHUB_LOGINS: ${ADMIN_GITHUB_LOGINS:-admin}

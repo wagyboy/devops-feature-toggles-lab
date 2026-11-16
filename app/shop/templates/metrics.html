@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Metrics · Desk Shop{% endblock %}
+{% block content %}
+<h1>Experiment metrics</h1>
+<p class="muted">{{ s.events }} events from non-admin users. <a href="{{ url_for('admin.events_csv') }}">Download events.csv</a></p>
+
+<h2>H1 · quick_buy: does a Buy button on the list raise visit conversion?</h2>
+<table>
+  <tr><th>Variant</th><th>Users</th><th>Visits</th><th>Visits with a purchase</th><th>Conversion</th>
+      <th>Purchases</th><th>Bought from list</th></tr>
+  {% for v, label in [(true, 'on (Buy now on list)'), (false, 'off (control)')] %}{% set r = s.h1[v] %}
+  <tr><td>{{ label }}</td><td>{{ r.users }}</td><td>{{ r.visits }}</td><td>{{ r.buy_visits }}</td>
+      <td>{{ '%s%%' % r.conversion if r.conversion is not none else '–' }}</td>
+      <td>{{ r.purchases }}</td><td>{{ r.from_list }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>H2 · stock_badge: does "Only N left" raise clicks on low-stock items?</h2>
+<table>
+  <tr><th>Variant</th><th>Users</th><th>Low-stock impressions</th><th>Clicks</th><th>Click-through</th>
+      <th>Low-stock purchases</th></tr>
+  {% for v, label in [(true, 'on (badge shown)'), (false, 'off (control)')] %}{% set r = s.h2[v] %}
+  <tr><td>{{ label }}</td><td>{{ r.users }}</td><td>{{ r.impressions }}</td><td>{{ r.clicks }}</td>
+      <td>{{ '%s%%' % r.ctr if r.ctr is not none else '–' }}</td><td>{{ r.low_purchases }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Activity per day (all users)</h2>
+<table>
+  <tr><th>Day (UTC)</th><th>Events</th><th>Users</th></tr>
+  {% for day, n, u in days %}<tr><td>{{ day }}</td><td>{{ n }}</td><td>{{ u }}</td></tr>
+  {% else %}<tr><td colspan="3" class="muted">No events yet.</td></tr>{% endfor %}
+</table>
+{% endblock %}

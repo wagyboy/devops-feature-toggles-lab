@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ p.name }} · Desk Shop{% endblock %}
+{% block content %}
+<article class="product">
+  <h1>{{ p.name }}</h1>
+  <p class="price">${{ p.price }}</p>
+  {% if stock_badge and low %}<span class="badge">Only {{ p.stock }} left</span>{% endif %}
+  <p>{{ p.blurb }}</p>
+  <form action="{{ url_for('shop.buy', sku=p.sku) }}" method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="source" value="product">
+    <button class="btn">Buy</button>
+  </form>
+  <p><a href="{{ url_for('shop.index') }}">Back to all products</a></p>
+</article>
+{% endblock %}

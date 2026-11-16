@@ -1,0 +1,17 @@
+{
+  "quick_buy": {
+    "description": "H1: a one-click Buy button on the product list, so users can buy without opening the product page",
+    "enabled": true,
+    "rollout": 50,
+    "force_on": [],
+    "force_off": []
+  },
+  "stock_badge": {
+    "description": "H2: an 'Only N left' badge on products with low stock",
+    "enabled": true,
+    "rollout": 50,
+    "force_on": [],
+    "force_off": [],
+    "low_stock_threshold": 5
+  }
+}
