@@ -1,4 +1,5 @@
 """Event tracking and the per-variant numbers behind the two hypotheses."""
+import math
 from collections import defaultdict
 
 from flask import g, session
@@ -30,6 +31,25 @@ def track_many(rows: list[dict]) -> None:
 
 def _rate(num: int, den: int) -> float | None:
     return round(100 * num / den, 1) if den else None
+
+
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
+    """95% Wilson score interval for k successes out of n, in percent.
+    With a handful of testers a single rate looks precise but is not; the interval shows how wide
+    the plausible range is, and overlapping intervals mean the data cannot tell the variants apart.
+    Wilson (not the normal approximation) stays inside 0-100% and behaves at k = 0 or k = n."""
+    if not n:
+        return None
+    p = k / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return round(100 * max(0.0, centre - half), 1), round(100 * min(1.0, centre + half), 1)
+
+
+def overlap(a: tuple[float, float] | None, b: tuple[float, float] | None) -> bool | None:
+    if a is None or b is None:
+        return None
+    return a[0] <= b[1] and b[0] <= a[1]
 
 
 def summary() -> dict:
@@ -64,10 +84,13 @@ def summary() -> dict:
         visits = len(a["visits"])
         buy_visits = len(a["buy_visits"] & a["visits"])
         out["h1"][v] = {"users": len(a["users"]), "visits": visits, "buy_visits": buy_visits,
-                        "conversion": _rate(buy_visits, visits), "purchases": a["purchases"],
-                        "from_list": a["from_list"]}
+                        "conversion": _rate(buy_visits, visits), "ci": wilson(buy_visits, visits),
+                        "purchases": a["purchases"], "from_list": a["from_list"]}
         out["h2"][v] = {"users": len(b["users"]), "impressions": b["impressions"], "clicks": b["clicks"],
-                        "ctr": _rate(b["clicks"], b["impressions"]), "low_purchases": b["low_purchases"]}
+                        "ctr": _rate(b["clicks"], b["impressions"]), "ci": wilson(b["clicks"], b["impressions"]),
+                        "low_purchases": b["low_purchases"]}
+    out["h1_overlap"] = overlap(out["h1"][True]["ci"], out["h1"][False]["ci"])
+    out["h2_overlap"] = overlap(out["h2"][True]["ci"], out["h2"][False]["ci"])
     return out
 
 

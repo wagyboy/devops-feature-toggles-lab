@@ -133,6 +133,7 @@ def test_metrics_exclude_admins(app, client):
     client.get("/")
     page = client.get("/admin/metrics").get_data(as_text=True)
     assert "0 events from non-admin users" in page
+    assert "95% interval" in page and "Not enough data" in page
 
 
 def test_search_escapes_input(client):

@@ -2,6 +2,7 @@
 from conftest import set_flag
 
 from shop.flags import bucket, is_on
+from shop.metrics import overlap, wilson
 
 ALICE = {"id": 7, "login": "alice"}
 
@@ -57,3 +58,17 @@ def test_force_lists_pin_test_accounts(app, tmp_path):
     with app.test_request_context():
         assert is_on("quick_buy", ALICE) is True      # case-insensitive login match
         assert is_on("stock_badge", ALICE) is False
+
+
+def test_wilson_interval_matches_known_values():
+    # reference values for the 95% Wilson score interval
+    assert wilson(0, 10) == (0.0, 27.8)
+    assert wilson(5, 10) == (23.7, 76.3)
+    assert wilson(10, 10) == (72.2, 100.0)
+    assert wilson(0, 0) is None
+
+
+def test_overlap_says_when_the_data_cannot_tell_variants_apart():
+    assert overlap((10.0, 40.0), (30.0, 60.0)) is True
+    assert overlap((10.0, 20.0), (30.0, 60.0)) is False
+    assert overlap(None, (30.0, 60.0)) is None
