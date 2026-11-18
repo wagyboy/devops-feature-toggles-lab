@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Metrics · Desk Shop{% endblock %}
+{% macro ci(r) %}{{ '%s–%s%%' % r.ci if r.ci is not none else '–' }}{% endmacro %}
+{% macro verdict(o) %}
+  {% if o is none %}<p class="muted">Not enough data in one of the variants yet.</p>
+  {% elif o %}<p class="muted">The 95% intervals overlap: with this sample the data cannot tell the variants apart.</p>
+  {% else %}<p><strong>The 95% intervals do not overlap:</strong> the difference is unlikely to be chance alone.</p>{% endif %}
+{% endmacro %}
 {% block content %}
 <h1>Experiment metrics</h1>
 <p class="muted">{{ s.events }} events from non-admin users. <a href="{{ url_for('admin.events_csv') }}">Download events.csv</a></p>
@@ -7,23 +13,25 @@
 <h2>H1 · quick_buy: does a Buy button on the list raise visit conversion?</h2>
 <table>
   <tr><th>Variant</th><th>Users</th><th>Visits</th><th>Visits with a purchase</th><th>Conversion</th>
-      <th>Purchases</th><th>Bought from list</th></tr>
+      <th>95% interval</th><th>Purchases</th><th>Bought from list</th></tr>
   {% for v, label in [(true, 'on (Buy now on list)'), (false, 'off (control)')] %}{% set r = s.h1[v] %}
   <tr><td>{{ label }}</td><td>{{ r.users }}</td><td>{{ r.visits }}</td><td>{{ r.buy_visits }}</td>
-      <td>{{ '%s%%' % r.conversion if r.conversion is not none else '–' }}</td>
+      <td>{{ '%s%%' % r.conversion if r.conversion is not none else '–' }}</td><td>{{ ci(r) }}</td>
       <td>{{ r.purchases }}</td><td>{{ r.from_list }}</td></tr>
   {% endfor %}
 </table>
+{{ verdict(s.h1_overlap) }}
 
 <h2>H2 · stock_badge: does "Only N left" raise clicks on low-stock items?</h2>
 <table>
   <tr><th>Variant</th><th>Users</th><th>Low-stock impressions</th><th>Clicks</th><th>Click-through</th>
-      <th>Low-stock purchases</th></tr>
+      <th>95% interval</th><th>Low-stock purchases</th></tr>
   {% for v, label in [(true, 'on (badge shown)'), (false, 'off (control)')] %}{% set r = s.h2[v] %}
   <tr><td>{{ label }}</td><td>{{ r.users }}</td><td>{{ r.impressions }}</td><td>{{ r.clicks }}</td>
-      <td>{{ '%s%%' % r.ctr if r.ctr is not none else '–' }}</td><td>{{ r.low_purchases }}</td></tr>
+      <td>{{ '%s%%' % r.ctr if r.ctr is not none else '–' }}</td><td>{{ ci(r) }}</td><td>{{ r.low_purchases }}</td></tr>
   {% endfor %}
 </table>
+{{ verdict(s.h2_overlap) }}
 
 <h2>Activity per day (all users)</h2>
 <table>
