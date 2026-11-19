@@ -67,18 +67,25 @@ def all_flags() -> dict[str, Flag]:
     return g.flags
 
 
-def is_on(name: str, user) -> bool:
+def explain(name: str, user) -> tuple[bool, str]:
+    """The variant a user gets and the rule that decided it. is_on() and the admin console both use
+    this, so the console can never show a different state from the one the user actually gets."""
     if user is None:
-        return False
+        return False, "signed out"
     flag = all_flags()[name]
     login = user["login"].lower()
+    b = bucket(name, user["id"])
     if not flag.enabled:
-        return False
+        return False, "killed"
     if login in flag.force_off:
-        return False
+        return False, "force_off"
     if login in flag.force_on:
-        return True
-    return bucket(name, user["id"]) < flag.rollout
+        return True, "force_on"
+    return b < flag.rollout, f"bucket {b} {'<' if b < flag.rollout else '>='} {flag.rollout}"
+
+
+def is_on(name: str, user) -> bool:
+    return explain(name, user)[0]
 
 
 def variants(user) -> dict[str, bool]:

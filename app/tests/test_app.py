@@ -114,6 +114,18 @@ def test_admin_switch_takes_effect_on_next_request_and_is_audited(app, client):
         assert conn.execute(select(func.count()).select_from(flag_audit)).scalar_one() == 2
 
 
+def test_admin_console_shows_killed_flag_as_off(app, client):
+    # issue #4: with the kill switch off and rollout 100 the console said "on by bucket"
+    set_flag(app, "quick_buy", enabled=False, rollout=100)
+    sign_in(client, "boss")
+    page = client.get("/admin/").get_data(as_text=True)
+    assert "<strong>off</strong> <span class=\"muted\">(killed)</span>" in page
+    assert "Buy now" not in client.get("/").get_data(as_text=True)
+    set_flag(app, "quick_buy", enabled=True, rollout=100)
+    page = client.get("/admin/").get_data(as_text=True)
+    assert "<strong>on</strong>" in page and "(killed)" not in page
+
+
 def test_events_record_both_variants(app, client):
     set_flag(app, "quick_buy", rollout=100)
     set_flag(app, "stock_badge", rollout=0)
