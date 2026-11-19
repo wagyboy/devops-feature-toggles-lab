@@ -7,7 +7,7 @@ from sqlalchemy import delete, insert, select
 
 from .auth import check_csrf, role_required
 from .db import engine, events, flag_audit, flag_overrides
-from .flags import all_flags, bucket
+from .flags import all_flags, explain
 from .metrics import daily_counts, summary
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -18,8 +18,8 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 def console():
     with engine().connect() as conn:
         audit = conn.execute(select(flag_audit).order_by(flag_audit.c.id.desc()).limit(15)).mappings().all()
-    return render_template("admin.html", flags=all_flags(), audit=audit, my_buckets={
-        name: bucket(name, g.user["id"]) for name in all_flags()})
+    return render_template("admin.html", flags=all_flags(), audit=audit, mine={
+        name: explain(name, g.user) for name in all_flags()})
 
 
 @bp.post("/flags/<name>")
