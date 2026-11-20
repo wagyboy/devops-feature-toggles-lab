@@ -6,7 +6,7 @@ MarkupSafe==3.0.4
 itsdangerous==2.2.0
 click==8.5.1
 blinker==1.9.0
-gunicorn==26.2.0
+gunicorn==27.0.1
 # sign-in: GitHub OAuth 2.0 client
 Authlib==1.9.8
 joserfc==1.7.7
