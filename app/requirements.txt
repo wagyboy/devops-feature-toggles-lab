@@ -9,7 +9,7 @@ blinker==1.9.0
 gunicorn==26.2.0
 # sign-in: GitHub OAuth 2.0 client
 Authlib==1.9.8
-joserfc==1.7.7
+joserfc==1.8.0
 cryptography==50.0.2
 cffi==2.1.1
 pycparser==3.11
