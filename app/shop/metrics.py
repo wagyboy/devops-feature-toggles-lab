@@ -94,6 +94,25 @@ def summary() -> dict:
     return out
 
 
+SUMMARY_COLUMNS = ["hypothesis", "flag", "variant", "users", "metric", "denominator", "successes",
+                   "rate_pct", "ci_low_pct", "ci_high_pct"]
+
+
+def summary_rows(s: dict) -> list[list]:
+    """The two metrics tables as flat rows, one per variant, for the demo charts.
+    Same numbers as /admin/metrics (admins excluded); empty cells where a variant has no data yet."""
+    out = []
+    specs = (("H1", "quick_buy", "visit conversion", "visits", "buy_visits", "conversion"),
+             ("H2", "stock_badge", "low-stock click-through", "impressions", "clicks", "ctr"))
+    for hyp, flag, metric, den, num, rate in specs:
+        for v in (True, False):
+            r = s[hyp.lower()][v]
+            lo, hi = r["ci"] if r["ci"] else ("", "")
+            out.append([hyp, flag, "on" if v else "off", r["users"], metric, r[den], r[num],
+                        "" if r[rate] is None else r[rate], lo, hi])
+    return out
+
+
 def daily_counts() -> list[tuple[str, int, int]]:
     """(day, events, distinct users) for the activity table."""
     per_day = defaultdict(lambda: [0, set()])

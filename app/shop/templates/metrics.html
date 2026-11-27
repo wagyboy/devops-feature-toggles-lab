@@ -8,7 +8,7 @@
 {% endmacro %}
 {% block content %}
 <h1>Experiment metrics</h1>
-<p class="muted">{{ s.events }} events from non-admin users. <a href="{{ url_for('admin.events_csv') }}">Download events.csv</a></p>
+<p class="muted">{{ s.events }} events from non-admin users. <a href="{{ url_for('admin.events_csv') }}">Download events.csv</a> · <a href="{{ url_for('admin.summary_csv') }}">Download summary.csv</a></p>
 
 <h2>H1 · quick_buy: does a Buy button on the list raise visit conversion?</h2>
 <table>
