@@ -10,6 +10,8 @@ behind GitHub sign-in, deployed on Render, with a DevSecOps pipeline in GitHub A
 
 Each signed-in user is placed in a stable 50/50 bucket per toggle (SHA-256 of flag name + user id).
 
+**Final demo (12/15):** see the [demo plan](docs/demo-plan.md) for the data window, who presents what, and the demo-day checklist.
+
 ## Run locally
 
 ```bash
