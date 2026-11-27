@@ -8,7 +8,7 @@ from sqlalchemy import delete, insert, select
 from .auth import check_csrf, role_required
 from .db import engine, events, flag_audit, flag_overrides
 from .flags import all_flags, explain
-from .metrics import daily_counts, summary
+from .metrics import SUMMARY_COLUMNS, daily_counts, summary, summary_rows
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -68,3 +68,15 @@ def events_csv():
             w.writerow(r)
     return Response(buf.getvalue(), mimetype="text/csv",
                     headers={"Content-Disposition": "attachment; filename=events.csv"})
+
+
+@bp.get("/summary.csv")
+@role_required("admin")
+def summary_csv():
+    # aggregated per variant, admins excluded: the numbers the final demo reports
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(SUMMARY_COLUMNS)
+    w.writerows(summary_rows(summary()))
+    return Response(buf.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=summary.csv"})

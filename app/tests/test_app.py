@@ -21,6 +21,7 @@ def test_customer_cannot_open_admin(client):
     sign_in(client, "alice")
     assert client.get("/admin/").status_code == 403
     assert client.get("/admin/events.csv").status_code == 403
+    assert client.get("/admin/summary.csv").status_code == 403
     page = client.get("/").get_data(as_text=True)
     assert client.post("/admin/flags/quick_buy", data={"csrf": csrf_from(page), "rollout": "100"}).status_code == 403
 
@@ -146,6 +147,22 @@ def test_metrics_exclude_admins(app, client):
     page = client.get("/admin/metrics").get_data(as_text=True)
     assert "0 events from non-admin users" in page
     assert "95% interval" in page and "Not enough data" in page
+
+
+def test_summary_csv_matches_metrics_and_excludes_admins(app, client):
+    set_flag(app, "quick_buy", rollout=100)
+    set_flag(app, "stock_badge", rollout=0)
+    sign_in(client, "alice")          # one visit: a list view with the 4 low-stock items
+    admin = app.test_client()
+    sign_in(admin, "boss")            # the admin's own list view must not be counted
+    resp = admin.get("/admin/summary.csv")
+    assert resp.status_code == 200 and resp.mimetype == "text/csv"
+    lines = resp.get_data(as_text=True).splitlines()
+    assert lines[0] == "hypothesis,flag,variant,users,metric,denominator,successes,rate_pct,ci_low_pct,ci_high_pct"
+    assert lines[1] == "H1,quick_buy,on,1,visit conversion,1,0,0.0,0.0,79.3"
+    assert lines[2] == "H1,quick_buy,off,0,visit conversion,0,0,,,"
+    assert lines[4] == "H2,stock_badge,off,1,low-stock click-through,4,0,0.0,0.0,49.0"
+    assert len(lines) == 5
 
 
 def test_search_escapes_input(client):
