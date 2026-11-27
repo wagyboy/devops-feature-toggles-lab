@@ -197,3 +197,24 @@ def test_security_headers(client):
     r = client.get("/health")
     assert "frame-ancestors 'none'" in r.headers["Content-Security-Policy"]
     assert r.headers["X-Frame-Options"] == "DENY"
+
+
+def test_second_worker_survives_the_create_table_race(tmp_path, monkeypatch):
+    # Two gunicorn workers on an empty database: the other one creates the tables first, so this
+    # worker's CREATE TABLE fails. It must retry and boot, not crash and take the service down.
+    from sqlalchemy.exc import OperationalError
+
+    from shop import create_app, db
+    real, calls = db.metadata.create_all, []
+
+    def lose_the_race_once(engine):
+        calls.append(1)
+        real(engine)
+        if len(calls) == 1:
+            raise OperationalError("CREATE TABLE products", {}, Exception("table products already exists"))
+
+    monkeypatch.setattr(db.metadata, "create_all", lose_the_race_once)
+    app = create_app({"DATABASE_URL": f"sqlite:///{tmp_path / 'race.db'}", "SECRET_KEY": "test-only"})
+    assert len(calls) == 2
+    with app.extensions["engine"].connect() as conn:
+        assert conn.execute(select(func.count()).select_from(db.products)).scalar_one() == 8

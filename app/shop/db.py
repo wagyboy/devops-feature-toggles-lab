@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from flask import Flask, current_app
 from sqlalchemy import (Boolean, Column, DateTime, Engine, Integer, MetaData, String, Table, Text, UniqueConstraint,
                         create_engine, func, insert, select)
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError, ProgrammingError
 
 metadata = MetaData()
 
@@ -91,10 +91,24 @@ def _database_url(url: str) -> str:
     return url
 
 
+def _create_tables(engine: Engine, attempts: int = 3) -> None:
+    """Gunicorn starts two workers at once, and on an empty database both run CREATE TABLE.
+    The loser gets "table ... already exists" (SQLite) or DuplicateTable (PostgreSQL); without
+    this retry that worker fails to boot and gunicorn shuts the whole service down. On retry,
+    create_all skips the tables the other worker has already made."""
+    for attempt in range(attempts):
+        try:
+            metadata.create_all(engine)
+            return
+        except (OperationalError, ProgrammingError):
+            if attempt == attempts - 1:
+                raise
+
+
 def init_app(app: Flask) -> None:
     engine = create_engine(_database_url(app.config["DATABASE_URL"]), pool_pre_ping=True)
     app.extensions["engine"] = engine
-    metadata.create_all(engine)
+    _create_tables(engine)
     with engine.begin() as conn:
         if conn.execute(select(func.count()).select_from(products)).scalar_one() == 0:
             for sku, name, price, stock, blurb in CATALOGUE:
