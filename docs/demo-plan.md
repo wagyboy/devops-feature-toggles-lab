@@ -10,7 +10,7 @@ The term-project demo shows how we tested two business hypotheses on Desk Shop w
 |---|---|---|
 | 11/25 – 12/08 | Pilot data collection (fixed 14-day window, no early stop) | @Liyun0011 monitors `/admin/metrics`; @cuhsuan follows up with participants; @wagyboy keeps the site and CI healthy |
 | 12/01 | Midpoint check: has every participant visited? Send reminders if not | @cuhsuan, @Liyun0011 |
-| 12/09 | Stop the experiment; compute rates and 95% intervals; apply the decision rule | @Liyun0011 |
+| 12/09 | Stop the experiment; compute rates and 95% intervals; apply the decision rule; download `events.csv` and `summary.csv` from `/admin/metrics` as the archived result (the Render database expires around 12/17) | @Liyun0011 |
 | 12/10 – 12/14 | Prepare slides, results and the live demo; one full rehearsal | All |
 | 12/15 | Final presentation and demo; flag expiry for `quick_buy` and `stock_badge` | All; flag owner @Liyun0011 |
 
@@ -19,7 +19,7 @@ The term-project demo shows how we tested two business hypotheses on Desk Shop w
 | # | Part | Presenter | What to show |
 |---|---|---|---|
 | 1 | Goal and hypotheses | 陳昱瑄 (PM) | Project goal, the two toggles, H1 and H2 with their success metrics and guardrails |
-| 2 | Live demo | 陳致安 (Developer) | GitHub sign-in; switch `quick_buy` and `stock_badge` ON/OFF in the admin console; a customer gets 403 on admin pages; the kill switch |
+| 2 | Live demo | 陳致安 (Developer) | GitHub sign-in; switch `quick_buy` and `stock_badge` ON/OFF in the admin console; the kill switch; in a second (private) browser window signed in with a non-admin GitHub account, opening `/admin` returns 403. Fallback: show the signed-out redirect to `/login` and point to `test_customer_cannot_open_admin` |
 | 3 | Results | 劉芳瑜 (QA) | `/admin/metrics` and the per-variant summary CSV: rates, 95% intervals, and what the decision rule says |
 | 4 | Lessons and next steps | 陳昱瑄 (PM) | What we learned about running the experiment; what happens to each flag after its expiry |
 
@@ -31,7 +31,8 @@ Pilot with 3 non-team users invited by the PM via Instagram. They sign in with t
 
 - [ ] Open https://desk-shop.onrender.com about 2 minutes before presenting (the Render service sleeps when idle; the first load takes about a minute)
 - [ ] Presenter laptop signed in as admin
-- [ ] After live switching, set both toggles back to their experiment state
+- [ ] Second (private) browser window signed in with a non-admin GitHub account, for the 403 demo
+- [ ] After live switching, set both toggles back to the data-window setting: `quick_buy` and `stock_badge` both enabled, rollout 50
 - [ ] Backup slides with ON/OFF screenshots and the metrics, in case the site is down
 - [ ] Rehearsal date agreed in the team chat
 
@@ -42,3 +43,5 @@ Pilot with 3 non-team users invited by the PM via Instagram. They sign in with t
 | Sample too small to show a difference | Present it as a pilot; show observed numbers and intervals, not a verdict |
 | Site is asleep or down during the demo | Warm it up beforehand; fall back to backup slides |
 | Live switching leaves a toggle in the wrong state | Checklist item above; the flag owner confirms after the demo |
+| A dependency upgrade during the data window changes the product mid-experiment | Merge Dependabot PRs only after 12/08; if a security fix cannot wait, note the date it went in so the analysis can account for it |
+| The Render database expires around 12/17 | Archive `events.csv` and `summary.csv` on 12/09 (timeline above) |
