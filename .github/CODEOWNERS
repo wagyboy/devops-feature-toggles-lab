@@ -1,0 +1,6 @@
+# Who is asked to review a change, by folder. The last matching line wins.
+*                   @wagyboy
+/app/               @wagyboy
+/.github/           @wagyboy
+/docs/test-plan.md  @Liyun0011
+/docs/demo-plan.md  @cuhsuan
