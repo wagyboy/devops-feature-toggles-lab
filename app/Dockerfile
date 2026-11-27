@@ -1,8 +1,12 @@
 FROM python:3.13-slim
 
-# Debian security fix that is newer than the base image
+# Debian security fixes that are newer than the base image
 RUN apt-get update \
- && apt-get install -y --no-install-recommends --only-upgrade zlib1g=1:1.3.dfsg+really1.3.1-1+deb13u1 \
+ && apt-get install -y --no-install-recommends --only-upgrade \
+      zlib1g=1:1.3.dfsg+really1.3.1-1+deb13u1 \
+      libzstd1=1.5.7+dfsg-1+deb13u1 \
+      passwd=1:4.17.4-2+deb13u1 \
+      login.defs=1:4.17.4-2+deb13u1 \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
