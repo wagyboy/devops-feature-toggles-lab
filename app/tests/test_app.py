@@ -161,8 +161,30 @@ def test_summary_csv_matches_metrics_and_excludes_admins(app, client):
     assert lines[0] == "hypothesis,flag,variant,users,metric,denominator,successes,rate_pct,ci_low_pct,ci_high_pct"
     assert lines[1] == "H1,quick_buy,on,1,visit conversion,1,0,0.0,0.0,79.3"
     assert lines[2] == "H1,quick_buy,off,0,visit conversion,0,0,,,"
+    assert lines[3] == "H2,stock_badge,on,0,low-stock click-through,0,0,,,"
     assert lines[4] == "H2,stock_badge,off,1,low-stock click-through,4,0,0.0,0.0,49.0"
     assert len(lines) == 5
+
+
+def test_summary_csv_with_data_in_both_variants(app, client):
+    # alice: quick_buy on, stock_badge off; she only views the list
+    set_flag(app, "quick_buy", rollout=100)
+    set_flag(app, "stock_badge", rollout=0)
+    sign_in(client, "alice")
+    # bob: the opposite variants; he clicks a low-stock item and buys it from the product page
+    set_flag(app, "quick_buy", rollout=0)
+    set_flag(app, "stock_badge", rollout=100)
+    bob = app.test_client()
+    sign_in(bob, "bob")
+    page = bob.get("/p/SKU-800?src=list").get_data(as_text=True)
+    assert bob.post("/buy/SKU-800", data={"csrf": csrf_from(page), "source": "product"}).status_code == 302
+    admin = app.test_client()
+    sign_in(admin, "boss")
+    lines = admin.get("/admin/summary.csv").get_data(as_text=True).splitlines()
+    assert lines[1] == "H1,quick_buy,on,1,visit conversion,1,0,0.0,0.0,79.3"
+    assert lines[2] == "H1,quick_buy,off,1,visit conversion,1,1,100.0,20.7,100.0"
+    assert lines[3] == "H2,stock_badge,on,1,low-stock click-through,4,1,25.0,4.6,69.9"
+    assert lines[4] == "H2,stock_badge,off,1,low-stock click-through,4,0,0.0,0.0,49.0"
 
 
 def test_search_escapes_input(client):
